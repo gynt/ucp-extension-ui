@@ -1,13 +1,24 @@
 local pSwitchToMenuView = core.exposeCode(core.AOBScan("55 8B 6C 24 08 83 FD 17"), 3, 1)
 local _, pThis = utils.AOBExtract("A3 I( ? ? ? ? ) 89 5C 24 1C")
 
+---@type luajit
+local luajit
+
+---@type LuaJITState
 local state
 
 local ui = {}
 
-function ui:enable()
+local addr_0x0057bfc3, addr_0x00613418 = utils.AOBExtract("68 I(? ? ? ?) B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 04 02 00 00")
+local addr_0x00424c40 = core.AOBScan("56 33 F6 68 ? ? ? ? B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 56 ")
+local addr_0x00424cd0 = core.AOBScan("0F ? ? ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 56 50 51 52 6A 00 6A 00 B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? A1 ? ? ? ? 8B CE C1 E1 04 2B ? ? ? ? ? 99 2B C2 D1 F8 50 A1 ? ? ? ? 2B ? ? ? ? ? B9 ? ? ? ? 99 2B C2 D1 F8 50 56 E8 ? ? ? ? A1 ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 89 4A 04 89 42 08 6A 00 ")
+local addr_0x00424da0 = core.AOBScan("83 EC 68 A1 ? ? ? ? 33 C4 89 44 24 64 83 ? ? ? ? ? ? 0F ? ? ? ? ? 83 ? ? ? ? ? ?")
+local pMenuViewConstructor = core.AOBScan("8B 54 24 08 8B C1 8B 4C 24 04 89 48 04")
+local pMenuConstructor = core.AOBScan("51 53 8B D9")
+local pMenuModal = core.AOBScan("8B 54 24 08 8B C1 8B 4C 24 04 89 08")
 
-  state = modules.luajit:create({
+local function initialize()
+  local state = luajit:create({
     name = "ui",
     requireHandler = function(self, path)
       local handle, err = io.open(string.format("ucp/modules/ui/%s.lua", path))
@@ -25,24 +36,27 @@ function ui:enable()
       return contents
     end,
     globals = {
-      addr_0x00613418 = 0x00613418,
-      addr_0x0057bfc3 = 0x0057bfc3,
-      addr_0x00424c40 = core.AOBScan("56 33 F6 68 ? ? ? ? B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 56 "),
-      addr_0x00424cd0 = core.AOBScan("0F ? ? ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 56 50 51 52 6A 00 6A 00 B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? A1 ? ? ? ? 8B CE C1 E1 04 2B ? ? ? ? ? 99 2B C2 D1 F8 50 A1 ? ? ? ? 2B ? ? ? ? ? B9 ? ? ? ? 99 2B C2 D1 F8 50 56 E8 ? ? ? ? A1 ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 89 4A 04 89 42 08 6A 00 "),
-      addr_0x00424da0 = core.AOBScan("83 EC 68 A1 ? ? ? ? 33 C4 89 44 24 64 83 ? ? ? ? ? ? 0F ? ? ? ? ? 83 ? ? ? ? ? ?"),
+      DAT_MenuViewIDMenuMapping = addr_0x00613418,
+      CODE_PushMenuViewIDMenuMapping = addr_0x0057bfc3,
+      CODE_MenuViewConstructor = pMenuViewConstructor,
+      CODE_MenuConstructor = pMenuConstructor,
+      CODE_MenuModal = pMenuModal,
+      addr_0x00424c40 = addr_0x00424c40,
+      addr_0x00424cd0 = addr_0x00424cd0,
+      addr_0x00424da0 = addr_0x00424da0,
     },
   })
 
   state:executeString([[ui = require("ui")]])
 
-  self:testMenu()
+  return state
+end
 
-  state:registerEventHandler("pong", function(key, obj)
-    log(VERBOSE, "received pong!")
-  end)
-  state:sendEvent("ping", "hello!")
+function ui:enable()
 
-  
+  state = initialize()
+
+
 end
 
 function ui:disable()
@@ -85,19 +99,31 @@ function ui:registerRequireHandler(func)
   state:registerRequireHandler(func)
 end
 
+---@return LuaJITState
 function ui:getState()
   return state
 end
 
-function ui:testMenu()
-  self:createMenuFromFile("ucp/modules/ui/ui/test.lua")
+---Creates a basic UI state from scratch
+---Only useful if you don't want to use the global UI state of this module
+---@return LuaJITState
+function ui:createState()
+  return initialize()
 end
 
+function ui:testMenu()
+  self:createMenuFromFile("ucp/modules/ui/ui/test.lua")
+  state:registerEventHandler("pong", function(key, obj)
+    log(VERBOSE, "received pong!")
+  end)
+  state:sendEvent("ping", "hello!")
+end
 
 return ui, {
   proxy = {
     ignored = {
       "getState",
+      "createState",
     }
   }
 }

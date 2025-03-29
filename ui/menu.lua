@@ -10,6 +10,7 @@ function Menu:createMenu(params)
 
   o.menuID = params.menuID
 
+  ---@type struct_Menu
   o.menu = ffi.new("Menu", {})
   o.menuView = ffi.new("struct MenuView", {})
 
@@ -17,6 +18,7 @@ function Menu:createMenu(params)
   o.menuItemsCount = (params.menuItemsCount + 1) or 100
   o.menuItemsIndex = 0
 
+  ---@type table
   o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount), {[0] = {menuItemType = 0x66}})
 
   for i=0,(o.menuItemsCount-1) do
@@ -44,8 +46,8 @@ function Menu:createMenu(params)
     o.pFrame = ffi.cast("cdeclVoidFunc *", o.frame)
   end
   
-  fMenu(o.menu, o.menuItems)
-  fMenuView(o.menuView, o.menuID, o.pPrepare, o.pInitial, o.pFrame)
+  _Menu(o.menu, o.menuItems)
+  _MenuView(o.menuView, o.menuID, o.pPrepare, o.pInitial, o.pFrame)
 
   o = setmetatable(o, self)
 

@@ -29,3 +29,6 @@ ffi.copy(menu.menuItems, mainMenuMenuItems, 99 * ffi.sizeof("MenuItem"))
 events.receive('ping', function(key, value)
   events.send('pong', "well received!")
 end)
+
+F = function(a) return {a = a} end
+G = function(a) return {a = a, b = 100}, 200, "" end
