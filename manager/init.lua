@@ -75,6 +75,10 @@ function Manager:registerMenu(menuAddress, preferredID)
     chosen = preferredID
   end
 
+  if self.menuIDAddressPairList[self.currentFreeMenuIndex].menuID ~= -1 then
+    error("menu ID slot already taken")
+  end
+
   self.menuIDAddressPairList[self.currentFreeMenuIndex].menuID = chosen
   self.menuIDAddressPairList[self.currentFreeMenuIndex].menuAddress = ffi.cast("struct Menu *", menuAddress)
 
