@@ -26,9 +26,21 @@ menu = Menu:createMenu({
 mainMenuMenuItems = ffi.cast("MenuItem *", 0x005e81c8)
 ffi.copy(menu.menuItems, mainMenuMenuItems, 99 * ffi.sizeof("MenuItem"))
 
-events.receive('ping', function(key, value)
-  events.send('pong', "well received!")
+remote.events.receive('ping', function(key, value)
+  remote.events.send('pong', "well received!")
 end)
+
+core = remote.interface.core
+
+remote.events.receive('aob', function(key, value)
+  log(INFO, remote.invoke("AOBScan", "00 11 22 33"))
+end)
+
+
+remote.events.receive('aob', function(key, value)
+  log(INFO, core.AOBScan("00 11 22 33"))
+end)
+
 
 F = function(a) return {a = a} end
 G = function(a) return {a = a, b = 100}, 200, "" end

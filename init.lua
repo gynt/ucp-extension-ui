@@ -2,7 +2,7 @@ local pSwitchToMenuView = core.exposeCode(core.AOBScan("55 8B 6C 24 08 83 FD 17"
 local _, pThis = utils.AOBExtract("A3 I( ? ? ? ? ) 89 5C 24 1C")
 
 ---@type luajit
-local luajit
+local luajit = modules.luajit
 
 ---@type LuaJITState
 local state
@@ -18,7 +18,7 @@ local pMenuConstructor = core.AOBScan("51 53 8B D9")
 local pMenuModal = core.AOBScan("8B 54 24 08 8B C1 8B 4C 24 04 89 08")
 
 local function initialize()
-  local state = luajit:create({
+  local state = luajit:createState({
     name = "ui",
     requireHandler = function(self, path)
       local handle, err = io.open(string.format("ucp/modules/ui/%s.lua", path))
@@ -45,6 +45,14 @@ local function initialize()
       addr_0x00424cd0 = addr_0x00424cd0,
       addr_0x00424da0 = addr_0x00424da0,
     },
+    interface = {
+      env = _ENV,
+      extra = {
+        AOBScan = function(target)
+          return core.AOBScan(target)
+        end,
+      }
+    }
   })
 
   state:executeString([[ui = require("ui")]])
@@ -104,19 +112,21 @@ function ui:getState()
   return state
 end
 
----Creates a basic UI state from scratch
----Only useful if you don't want to use the global UI state of this module
----@return LuaJITState
-function ui:createState()
-  return initialize()
-end
+--- Bad idea for now:
+-- ---Creates a basic UI state from scratch
+-- ---Only useful if you don't want to use the global UI state of this module
+-- ---@return LuaJITState
+-- function ui:createState()
+--   return initialize()
+-- end
 
 function ui:testMenu()
-  self:createMenuFromFile("ucp/modules/ui/ui/test.lua")
+  self:createMenuFromFile("ucp/modules/ui/ui/tests/test1.lua")
   state:registerEventHandler("pong", function(key, obj)
     log(VERBOSE, "received pong!")
   end)
   state:sendEvent("ping", "hello!")
+  state:sendEvent("aob", "heyho!")
 end
 
 return ui, {

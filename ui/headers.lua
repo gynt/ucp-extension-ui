@@ -1686,7 +1686,7 @@ typedef enum MenuModalType {
     NO_MENU=0,
     DEBUG_DATA_CURRENT_PLAYER_DATA=1,
     DEBUG_DATA_UNIT_DATA=2,
-    DEBUG_DATA_ZONE_DATA?=3,
+    DEBUG_DATA_ZONE_DATA=3,
     DEBUG_DATA_NETWORK=4,
     PAUSE_MENU=5,
     VIDEO_OPTIONS=6,
@@ -1735,7 +1735,7 @@ typedef enum MenuModalType {
     NEW_EVENT_CONDITION=108,
     NEW_EVENT_ACTION=109,
     UNUSED_CREATE_MESSAGE_EVENT=110,
-    UNUSED_SIEGE_ATTACKING_FORCE?=111,
+    UNUSED_SIEGE_ATTACKING_FORCE=111,
     BUILDING_AVAILABILITY=112,
     TUTORIAL_BOX=113,
     TUTORIAL_BOX_WITH_LEAVE=114,
@@ -1751,7 +1751,7 @@ typedef enum MenuModalType {
     ALLIES_SEND_GOODS=124,
     GREATEST_LORD=125,
     CHOOSE_RANDOM_NUMBER_OF_ENEMIES=126,
-    DEBUG_DATA_AIV_STATE?=128,
+    DEBUG_DATA_AIV_STATE=128,
     DELETE_GAME_RECORD=129,
     TACTICAL_POWER_BAR=130,
     DEBUG_DATA_SPLIT_INFO=200,
@@ -1773,6 +1773,8 @@ struct MenuModal {
     struct Menu *pointerToMenu;
     struct MenuModal *pointerToNextModalMenu;
 };
+
+typedef void (MenuModalRenderFunction)(int, int, int, int);
 
 ]])
 
