@@ -7,17 +7,15 @@ local luajit = modules.luajit
 ---@type LuaJITState
 local state
 
+local manager = require("manager")
+manager:initialize()
+
 local ui = {}
 
-local addr_0x0057bfc3, addr_0x00613418 = utils.AOBExtract("68 I(? ? ? ?) B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 04 02 00 00")
-local addr_0x00424c40 = core.AOBScan("56 33 F6 68 ? ? ? ? B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 56 ")
-local addr_0x00424cd0 = core.AOBScan("0F ? ? ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 56 50 51 52 6A 00 6A 00 B9 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 8B ? ? ? ? ? A1 ? ? ? ? 8B CE C1 E1 04 2B ? ? ? ? ? 99 2B C2 D1 F8 50 A1 ? ? ? ? 2B ? ? ? ? ? B9 ? ? ? ? 99 2B C2 D1 F8 50 56 E8 ? ? ? ? A1 ? ? ? ? 8B ? ? ? ? ? 8B ? ? ? ? ? 89 4A 04 89 42 08 6A 00 ")
-local addr_0x00424da0 = core.AOBScan("83 EC 68 A1 ? ? ? ? 33 C4 89 44 24 64 83 ? ? ? ? ? ? 0F ? ? ? ? ? 83 ? ? ? ? ? ?")
-local pMenuViewConstructor = core.AOBScan("8B 54 24 08 8B C1 8B 4C 24 04 89 48 04")
-local pMenuConstructor = core.AOBScan("51 53 8B D9")
-local pMenuModal = core.AOBScan("8B 54 24 08 8B C1 8B 4C 24 04 89 08")
-
-local function initialize()
+local function initialize(options)
+  local options = options or {
+    headers = 'latest',
+  }
   local state = luajit:createState({
     name = "ui",
     requireHandler = function(self, path)
@@ -35,16 +33,7 @@ local function initialize()
 
       return contents
     end,
-    globals = {
-      DAT_MenuViewIDMenuMapping = addr_0x00613418,
-      CODE_PushMenuViewIDMenuMapping = addr_0x0057bfc3,
-      CODE_MenuViewConstructor = pMenuViewConstructor,
-      CODE_MenuConstructor = pMenuConstructor,
-      CODE_MenuModal = pMenuModal,
-      addr_0x00424c40 = addr_0x00424c40,
-      addr_0x00424cd0 = addr_0x00424cd0,
-      addr_0x00424da0 = addr_0x00424da0,
-    },
+    globals = {},
     interface = {
       env = _ENV,
       extra = {
@@ -55,6 +44,7 @@ local function initialize()
     }
   })
 
+  state:importHeaderFile(string.format("ucp/modules/ui/ui/headers/%s/ui.h", options.headers))
   state:executeString([[ui = require("ui")]])
 
   return state
@@ -71,6 +61,10 @@ function ui:disable()
 
 end
 
+
+function ui:registerMenu(menuAddress, preferredID)
+  return manager:registerMenu(menuAddress, preferredID)
+end
 
 function ui:switchToMenu(menuID, delay)
   pSwitchToMenuView(pThis, menuID or 41, delay or 0)
