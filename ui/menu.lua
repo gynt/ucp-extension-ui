@@ -1,5 +1,30 @@
+--ui/menu.lua
 
-Menu = {}
+local api = api or {}
+api.ui = api.ui or {}
+
+if remote then
+  _G.api = api
+end
+
+local game = game
+
+if not remote then 
+  game = require("ui.game")
+end
+
+local ffi = ffi
+if not remote then
+  ffi = modules.cffi:cffi()
+end
+
+local manager = manager
+if remote then
+   manager = remote.interface.manager
+end
+
+local Menu = {}
+api.ui.Menu = Menu
 
 function Menu:createMenu(params)
   local o = {}
@@ -8,21 +33,30 @@ function Menu:createMenu(params)
     error("no menu id")
   end
 
+  local availableMenuID = manager.getAvailableMenuID(params.menuID)
+  if availableMenuID ~= params.menuID then
+    error(string.format("menu id not available: %s", params.menuID))
+  end
+
   o.menuID = params.menuID
 
+  o.pMenu = ffi.new("Menu[1]", {})
   ---@type struct_Menu
-  o.menu = ffi.new("Menu", {})
-  o.menuView = ffi.new("struct MenuView", {})
+  o.menu = o.pMenu[0]
+  o.pMenuView = ffi.new("struct MenuView[1]", {})
+  o.menuView = o.pMenuView[0]
 
-  -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
-  o.menuItemsCount = (params.menuItemsCount + 1) or 100
+  
+  o.menuItemsCount = params.menuItemsCount or 100
   o.menuItemsIndex = 0
 
+  -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
   ---@type table
-  o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount), {[0] = {menuItemType = 0x66}})
+  o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {}) -- TODO:, use [0] = {menuItemType = 0x66}
 
-  for i=0,(o.menuItemsCount-1) do
+  for i=0,o.menuItemsCount do
     o.menuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
+    o.menuItems[i].menuPointer = ffi.nullptr
   end
   
   if params.pPrepare then
@@ -46,14 +80,26 @@ function Menu:createMenu(params)
     o.pFrame = ffi.cast("cdeclVoidFunc *", o.frame)
   end
   
-  _Menu(o.menu, o.menuItems)
-  _MenuView(o.menuView, o.menuID, o.pPrepare, o.pInitial, o.pFrame)
+  game.UI.Menu(o.menu, o.menuItems)
+  game.UI.MenuView(o.menuView, o.menuID, o.pPrepare, o.pInitial, o.pFrame)
 
   o = setmetatable(o, self)
 
   self.__index = self
 
+  o:register()
+
   return o
+end
+
+local ffi_tonumber = ffi.tonumber or tonumber
+
+function Menu:register()
+  if self.pMenu == nil then error("menu is nil") end
+  
+  local addr = ffi_tonumber(ffi.cast("long", self.pMenu))
+  if addr == nil then error("addr is nil") end
+  return manager.registerMenu(addr, self.menuID)
 end
 
 function Menu:addMenuItem(params)
@@ -61,7 +107,8 @@ function Menu:addMenuItem(params)
     error("reached menu item limit")
   end
 
-  local menuItem = self.menuItemsIndex[self.menuItemsIndex]
+  local menuItem = self.menuItems[self.menuItemsIndex]
+  menuItem.menuPointer = self.menu
 
   for k, v in pairs(params) do
     menuItem[k] = v
@@ -71,4 +118,8 @@ function Menu:addMenuItem(params)
 
   -- return self for chaining
   return self
+end
+
+if not remote then
+  return api
 end

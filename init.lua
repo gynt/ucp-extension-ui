@@ -8,7 +8,7 @@ local luajit = modules.luajit
 local state
 
 local manager = require("manager")
-manager:initialize()
+manager.initialize()
 
 local ui = {}
 
@@ -40,6 +40,7 @@ local function initialize(options)
         AOBScan = function(target)
           return core.AOBScan(target)
         end,
+        manager = manager,
       }
     }
   })
@@ -63,7 +64,7 @@ end
 
 
 function ui:registerMenu(menuAddress, preferredID)
-  return manager:registerMenu(menuAddress, preferredID)
+  return manager.registerMenu(menuAddress, preferredID)
 end
 
 function ui:switchToMenu(menuID, delay)
@@ -106,6 +107,14 @@ function ui:getState()
   return state
 end
 
+function ui:testInterface()
+  return {
+    game = require("ui.game"),
+    api = require("ui.menu"),
+    manager = manager,
+  }
+end
+
 --- Bad idea for now:
 -- ---Creates a basic UI state from scratch
 -- ---Only useful if you don't want to use the global UI state of this module
@@ -114,14 +123,6 @@ end
 --   return initialize()
 -- end
 
-function ui:testMenu()
-  self:createMenuFromFile("ucp/modules/ui/ui/tests/test1.lua")
-  state:registerEventHandler("pong", function(key, obj)
-    log(VERBOSE, "received pong!")
-  end)
-  state:sendEvent("ping", "hello!")
-  state:sendEvent("aob", "heyho!")
-end
 
 return ui, {
   proxy = {

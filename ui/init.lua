@@ -1,2 +1,2 @@
-require("ui/functions")
+require("ui/game")
 require("ui/menu")
