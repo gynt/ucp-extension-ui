@@ -26,6 +26,8 @@ end
 local Menu = {}
 api.ui.Menu = Menu
 
+-- TODO: createMenu() should be passed the list of menu items to be created.
+-- Because the Constructor_Menu() function already expects them to be present.
 function Menu:createMenu(params)
   local o = {}
 

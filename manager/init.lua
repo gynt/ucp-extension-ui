@@ -5,10 +5,11 @@ modules.cffi:importHeaderFile("ucp/modules/ui/ui/headers/latest/ui.h")
 local CODE_PushMenuViewIDMenuMapping, pMenuViewIDMenuMapping = utils.AOBExtract("68 I(? ? ? ?) B9 ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 68 04 02 00 00")
 local MenuViewIDMenuMapping = ffi.cast("MenuIDMenuElementAddressPair*", pMenuViewIDMenuMapping)
 
+local _, pModalMenuStackTop = utils.AOBExtract("8B ? I(? ? ? ?) 89 50 24")
 
 local oldOne = nil
 
-local function reallocate(old, oldSize, newSize)
+local function reallocateMenuPairArray(old, oldSize, newSize)
   oldOne = old -- store it here so it doesn't get garbage collected just yet
   local ct = string.format("MenuIDMenuElementAddressPair[%s]", newSize)
   log(VERBOSE, ct)
@@ -42,9 +43,12 @@ function Manager.initialize(options)
   -- Manager.expandIfNecessary(factor)
   -- self.expansionAllowed = false
 
-  self.menuIDAddressPairList = reallocate(MenuViewIDMenuMapping, 50 + 1, options.menuEntryCount + 1)
+  self.menuIDAddressPairList = reallocateMenuPairArray(MenuViewIDMenuMapping, 50 + 1, options.menuEntryCount + 1)
   self.maxMenus = options.menuEntryCount
   self.currentFreeMenuIndex = 50 -- override the first "-1" we find
+
+  self.modalMenuStackTop = ffi.cast("struct MenuModal **", pModalMenuStackTop)
+
   self.initialized = true
 end
 
@@ -74,7 +78,7 @@ function Manager.expandIfNecessary(factor)
     local newSize = self.maxMenus * factor
     log(INFO, string.format("expanding menu id array from old size (%s) to new size (%s)", self.maxMenus, newSize))
     
-    self.menuIDAddressPairList = reallocate(self.menuIDAddressPairList, self.maxMenus + 1, newSize + 1)
+    self.menuIDAddressPairList = reallocateMenuPairArray(self.menuIDAddressPairList, self.maxMenus + 1, newSize + 1)
     self.currentFreeMenuIndex = self.maxMenus
     self.maxMenus = newSize
   end
@@ -96,13 +100,12 @@ function Manager.getUnavailableMenuIDs()
   return unavailable
 end
 
-function Manager.getAvailableMenuID(preferredID)
-  local unavailable = Manager.getUnavailableMenuIDs()
+local function chooseAvailable(unavailable, preferredID)
 
   local preferredID = preferredID or 1
   local chosen = -1
   if preferredID <= 0 then
-    error(string.format("registerMenu: illegal preferred ID: '%s'", preferredID))
+    error(string.format("illegal preferred ID: '%s'", preferredID))
   end
   if unavailable[preferredID] == true then
     for i=preferredID+1, preferredID+1000 do -- start trying from preferredID onwards
@@ -118,6 +121,12 @@ function Manager.getAvailableMenuID(preferredID)
   if chosen == -1 then error("invalid menu") end
 
   return chosen
+  
+end
+
+function Manager.getAvailableMenuID(preferredID)
+  local unavailable = Manager.getUnavailableMenuIDs()
+  return chooseAvailable(unavailable, preferredID)
 end
 
 function Manager.registerMenu(menuAddress, preferredID)
@@ -164,9 +173,53 @@ function Manager.lookupMenu(menuID)
   end
 end
 
+
+
+function Manager.getUnavailableModalMenuIDs()
+  local self = ManagerSingletonState
+
+  local unavailable = {}
+
+  local current = self.modalMenuStackTop[0]
+  local currentAddr = ffi.tonumber(ffi.cast("unsigned long", current))
+  
+  while currentAddr > 0 and currentAddr < 4294967295 do
+    local id = current.menuModalID
+    unavailable[id] = true
+    
+    current = current.pointerToNextModalMenu
+    currentAddr = ffi.tonumber(ffi.cast("unsigned long", current))
+  end
+
+  return unavailable
+end
+
+function Manager.lookupModalMenu(menuID)
+  local self = ManagerSingletonState
+  local current = self.modalMenuStackTop[0]
+  local currentAddr = ffi.tonumber(ffi.cast("unsigned long", current))
+
+  while currentAddr > 0 and currentAddr < 4294967295 do
+    local id = current.menuModalID
+    
+    if id == menuID then
+      return current
+    end
+    
+    current = current.pointerToNextModalMenu
+    currentAddr = ffi.tonumber(ffi.cast("unsigned long", current))
+  end
+
+  return nil
+end
+
+function Manager.getAvailableModalMenuID(preferredID)
+  local unavailable = Manager.getUnavailableModalMenuIDs()
+  return chooseAvailable(unavailable, preferredID)
+end
+
 function Manager.getState()
   return ManagerSingletonState
 end
-
 
 return Manager
