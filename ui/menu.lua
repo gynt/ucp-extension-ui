@@ -37,7 +37,8 @@ api.ui.Menu = Menu
 
 ---@class MenuParams
 ---@field menuID number
----@field menuItemsCount number
+---@field menuItemsCount number|nil
+---@field menuItems table<MenuItem>|nil
 ---@field pPrepare number|nil
 ---@field pInitial number|nil
 ---@field pFrame number|nil
@@ -69,19 +70,27 @@ function Menu:createMenu(params)
   o.pMenuView = ffi.new("struct MenuView[1]", {})
   o.menuView = o.pMenuView[0]
 
-  
-  o.menuItemsCount = params.menuItemsCount or 100
-  o.menuItemsIndex = 0
+  if params.menuItemsCount ~= nil then
+    o.menuItemsCount = params.menuItemsCount  
+    o.menuItemsIndex = 0
+    -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
+    ---@type table
+    o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {}) -- TODO:, use [0] = {menuItemType = 0x66}
 
-  -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
-  ---@type table
-  o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {}) -- TODO:, use [0] = {menuItemType = 0x66}
-
-  for i=0,o.menuItemsCount do
-    o.menuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
-    o.menuItems[i].menuPointer = ffi.nullptr
+      
+    for i=0,o.menuItemsCount do
+      o.menuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
+      o.menuItems[i].menuPointer = ffi.nullptr
+    end
+  elseif params.menuItems ~= nil then
+    ---@type table
+    o.menuItems = params.menuItems -- Assumes the user took care of the final entry...
+    o.menuItemsCount = ffi.sizeof(o.menuItems) / ffi.sizeof("MenuItem")
+    o.menuItemsIndex = o.menuItemsCount
+  else
+    error("no menu items specified")
   end
-  
+
   if params.pPrepare ~= nil then
     o.pPrepare = params.pPrepare
   else

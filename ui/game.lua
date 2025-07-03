@@ -129,6 +129,11 @@ game.Rendering.getTextStringInGroupAtOffset = ffi.cast([[
   )
 ]], core.AOBScan("8B 44 24 04 8D 50 FB"))
 
+local _, pButtonState = utils.AOBExtract("8B ? I( ? ? ? ? ) 8D 44 38 65")
+game.Rendering.ButtonState = ffi.cast([[
+  ButtonRenderState *
+]], pButtonState)
+
 if not remote then
   return game
 end

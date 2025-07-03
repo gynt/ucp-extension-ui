@@ -1554,6 +1554,7 @@ union ActiveMenuTab { /* The enum changes based on the context. */
 union MenuItemCallbackParameter {
     union ActiveMenuTab activeMenuTab;
     int textIndex;
+    int parameter;
 };
 
 struct ButtonState {
@@ -1794,3 +1795,14 @@ struct MenuModal {
 };
 
 typedef void (__cdecl *MenuModalRenderFunction)(int, int, int, int);
+
+typedef struct ButtonRenderState {
+  int x;
+  int y;
+  int width;
+  int height;
+  int interacting;
+  int gmDataIndex;
+  int gmPictureIndex;
+  int blendStrength;
+} ButtonRenderState;
