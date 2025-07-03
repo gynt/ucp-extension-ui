@@ -3,7 +3,7 @@
 local api = api or {}
 api.ui = api.ui or {}
 
-if remote then
+if remote ~= nil then
   _G.api = api
 end
 
@@ -13,19 +13,36 @@ if not remote then
   game = require("ui.game")
 end
 
+---@type CFFIInterface
 local ffi = ffi
 if not remote then
   ffi = modules.cffi:cffi()
 end
 
-local manager = manager
-if remote then
+local manager = _G.manager
+if remote ~= nil then
    manager = remote.interface.manager
 end
 
+---@class ModalMenu
 local ModalMenu = {}
+
+---@type ModalMenu
 api.ui.ModalMenu = ModalMenu
 
+---@class ModalMenuParams
+---@field modalMenuID number
+---@field pointerToMenu number
+---@field width number
+---@field height number
+---@field x number
+---@field y number
+---@field pMenuModalRenderFunction number|nil
+---@field menuModalRenderFunction (fun(x, y, width, height):void)|nil
+---@field borderStyle number
+---@field backgroundColor number
+
+---@param params ModalMenuParams
 function ModalMenu:createModalMenu(params)
   local o = {}
 
@@ -70,7 +87,7 @@ function ModalMenu:createModalMenu(params)
   o.y = params.y or -1
 
   o.modalMenuID = params.modalMenuID
-  o.pModalMenu = ffi.new("MenuModal[1]", {})
+  o.pModalMenu = ffi.new("struct MenuModal[1]", {})
   o.modalMenu = o.pModalMenu[0]
 
   game.UI.MenuModal(
@@ -81,7 +98,7 @@ function ModalMenu:createModalMenu(params)
     o.width,
     o.height,
     o.borderStyle,
-    o.backgroundColour,
+    o.backgroundColor,
     o.pMenuModalRenderFunction,
     o.pointerToMenu
   )

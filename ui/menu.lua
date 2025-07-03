@@ -1,9 +1,15 @@
 --ui/menu.lua
 
+---@class UIAPI
+---@field Menu Menu
+---@field ModalMenu ModalMenu
+
+---@class API
+---@field ui UIAPI
 local api = api or {}
 api.ui = api.ui or {}
 
-if remote then
+if remote ~= nil then
   _G.api = api
 end
 
@@ -13,21 +19,36 @@ if not remote then
   game = require("ui.game")
 end
 
+---@type CFFIInterface
 local ffi = ffi
 if not remote then
   ffi = modules.cffi:cffi()
 end
 
-local manager = manager
-if remote then
+local manager = _G.manager
+if remote ~= nil then
    manager = remote.interface.manager
 end
 
+---@class Menu
+---@field pMenu number
 local Menu = {}
 api.ui.Menu = Menu
 
+---@class MenuParams
+---@field menuID number
+---@field menuItemsCount number
+---@field pPrepare number|nil
+---@field pInitial number|nil
+---@field pFrame number|nil
+---@field prepare (fun():void)|nil
+---@field initial (fun():void)|nil
+---@field frame (fun():void)|nil
+
+
 -- TODO: createMenu() should be passed the list of menu items to be created.
 -- Because the Constructor_Menu() function already expects them to be present.
+---@param params MenuParams
 function Menu:createMenu(params)
   local o = {}
 
@@ -61,21 +82,21 @@ function Menu:createMenu(params)
     o.menuItems[i].menuPointer = ffi.nullptr
   end
   
-  if params.pPrepare then
+  if params.pPrepare ~= nil then
     o.pPrepare = params.pPrepare
   else
     o.prepare = params.prepare or function() end
     o.pPrepare = ffi.cast("cdeclVoidFunc *", o.prepare)
   end
   
-  if params.pInitial then
+  if params.pInitial ~= nil then
     o.pInitial = params.pInitial
   else
     o.initial = params.initial or function() end
     o.pInitial = ffi.cast("cdeclVoidFunc *", o.initial)
   end
   
-  if params.pFrame then
+  if params.pFrame ~= nil then
     o.pFrame = params.pFrame
   else
     o.frame = params.frame or function() end
