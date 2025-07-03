@@ -1592,7 +1592,7 @@ struct MenuItem {
     int itemHeight;
     void (*menuItemActionHandler)(int);
     union MenuItemCallbackParameter callbackParameter;
-    void (*menuItemRenderFunction)(int, ...);
+    void (*menuItemRenderFunction)(int, ...); // This signature differs per render function type
     union MenuItemFirstItemTypeData firstItemTypeData;
     enum MenuItemRenderFunctionType menuItemRenderFunctionType;
     int field9_0x28;
@@ -1788,9 +1788,9 @@ struct MenuModal {
   int height;
   int borderStyle; /* 512 is the nice red double border. */
   int backgroundColourIndex;
-  void (*menuModalRenderFunction)(int, int, int, int);
+  void (__cdecl *menuModalRenderFunction)(int, int, int, int);
   struct Menu *pointerToMenu;
   struct MenuModal *pointerToNextModalMenu;
 };
 
-typedef void (*MenuModalRenderFunction)(int, int, int, int);
+typedef void (__cdecl *MenuModalRenderFunction)(int, int, int, int);

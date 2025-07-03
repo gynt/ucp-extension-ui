@@ -32,15 +32,16 @@ api.ui.ModalMenu = ModalMenu
 
 ---@class ModalMenuParams
 ---@field modalMenuID number
----@field pointerToMenu number
+---@field pointerToMenu number|nil
+---@field menu Menu|nil
 ---@field width number
 ---@field height number
 ---@field x number
 ---@field y number
 ---@field pMenuModalRenderFunction number|nil
----@field menuModalRenderFunction (fun(x, y, width, height):void)|nil
----@field borderStyle number
----@field backgroundColor number
+---@field menuModalRenderFunction (fun(x:number, y:number, width:number, height:number):void)|nil
+---@field borderStyle number|nil
+---@field backgroundColor number|nil
 
 ---@param params ModalMenuParams
 function ModalMenu:createModalMenu(params)
@@ -52,10 +53,16 @@ function ModalMenu:createModalMenu(params)
     o.modalMenuID = params.modalMenuID
   end
 
-  if params.pointerToMenu == nil then
+  if params.pointerToMenu == nil and params.menu == nil then
     error("no menu specified")
   else
-    o.pointerToMenu = params.pointerToMenu
+    if o.pointerToMenu ~= nil then
+      o.pointerToMenu = params.pointerToMenu  
+    elseif params.menu ~= nil then
+      o.pointerToMenu = params.menu.pMenu
+    else
+      error("no menu specified")
+    end
   end
 
   if params.width == nil then
@@ -73,11 +80,15 @@ function ModalMenu:createModalMenu(params)
   -- if params.menuModalRenderFunction == nil then
   --   error("no render function specified")
   -- end
-  if params.pMenuModalRenderFunction then
-    o.pMenuModalRenderFunction = params.pMenuModalRenderFunction
+  if params.pMenuModalRenderFunction ~= nil then
+    if type(params.pMenuModalRenderFunction) == "number" then
+      o.pMenuModalRenderFunction = ffi.cast("void (__cdecl *)(int, int, int, int)", params.pMenuModalRenderFunction)
+    else
+      o.pMenuModalRenderFunction = params.pMenuModalRenderFunction
+    end
   else
     o.menuModalRenderFunction = params.menuModalRenderFunction or function(x, y, width, height) end
-    o.pMenuModalRenderFunction = ffi.cast("void (*)(int, int, int, int)", o.menuModalRenderFunction)
+    o.pMenuModalRenderFunction = ffi.cast("void (__cdecl *)(int, int, int, int)", o.menuModalRenderFunction)
   end
 
   o.borderStyle = params.borderStyle or 512
