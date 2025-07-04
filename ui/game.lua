@@ -82,6 +82,21 @@ game.Rendering.renderGM = ffi.cast([[
   )
 ]], pRenderGM)
 
+local pRenderGMWithBlending = core.AOBScan("8B 54 24 08 56 8B 74 24 08 8B ? ? ? ? ? ? 8D 44 10 FF ")
+game.Rendering.renderGMWithBlending = ffi.cast([[
+
+  void (__thiscall *)
+  (
+    void *this, // textureRenderCore
+    int gmID,
+    int imageID,
+    int drawX,
+    int drawY,
+    int blendStrength
+  )
+
+]], pRenderGMWithBlending)
+
 local _, pTextureRenderCore = utils.AOBExtract("39 ? I( ? ? ? ? ) 74 05 83 C8 FF")
 game.Rendering.pTextureRenderCore = pTextureRenderCore
 
