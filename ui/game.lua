@@ -119,6 +119,7 @@ game.Rendering.renderNumber2 = ffi.cast([[
 
 local _, pTextManager = utils.AOBExtract("89 ? I( ? ? ? ? ) 7E 05")
 game.Rendering.pTextManager = pTextManager
+game.Rendering.textManager = ffi.cast("void *", pTextManager)
 
 game.Rendering.renderTextToScreen = ffi.cast([[
   void (__thiscall *)
@@ -144,10 +145,72 @@ game.Rendering.getTextStringInGroupAtOffset = ffi.cast([[
   )
 ]], core.AOBScan("8B 44 24 04 8D 50 FB"))
 
+
 local _, pButtonState = utils.AOBExtract("8B ? I( ? ? ? ? ) 8D 44 38 65")
+---@class ButtonRenderState
+---@field x number
+---@field y number
+---@field width number
+---@field height number
+---@field interacting number
+---@field gmDataIndex number
+---@field gmPictureIndex number
+---@field blendStrength number
+---@type ButtonRenderState
 game.Rendering.ButtonState = ffi.cast([[
   ButtonRenderState *
 ]], pButtonState)
+
+game.Rendering.renderButtonBackground = ffi.cast([[
+  void (__thiscall *)
+  (
+    void * this, // Alpha and button surface
+    int blendStrength,
+    int renderTarget
+  )
+]], core.AOBScan("8B 44 24 04 83 EC 08"))
+
+local _, pAlphaAndButtonSurface = utils.AOBExtract("8B ? I( ? ? ? ? ) 89 ? ? ? ? ? 8B ? ? ? ? ? D1 E2")
+game.Rendering.alphaAndButtonSurface = ffi.cast("void *", pAlphaAndButtonSurface)
+
+game.Rendering.drawColorBox = ffi.cast([[
+  void (__thiscall *)
+  (
+    void * this, // pencilrendercore
+    int left,
+    int top,
+    int right,
+    int bottom,
+    unsigned short color
+  )
+]], core.AOBScan("56 8B F1 E8 ? ? ? ? 8B 44 24 18 8B 4C 24 14 8B 54 24 10 50 8B 44 24 10 51 8B 4C 24 10 52 50 51 8B CE E8 ? ? ? ? 85 C0 74 1B "))
+
+local _, pPencilRenderCore = utils.AOBExtract("B9 I( ? ? ? ? ) E8 ? ? ? ? 39 7E D8")
+game.Rendering.pencilRenderCore = ffi.cast("void *", pPencilRenderCore)
+
+game.Rendering.renderNumberToScreen2 = ffi.cast([[
+  void (__thiscall *)
+  (
+    void * this, // text manager
+    int number,
+    int xParam,
+    int yParam,
+    int alignment,
+    unsigned int color,
+    int fontSize,
+    bool keepOffsetX,
+    int blendStrength
+  )
+
+]], core.AOBScan("8B 44 24 04 56 50 8B F1 E8 ? ? ? ? 8B 4C 24 24"))
+
+  local _, pColorGreyishYellow = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 58")
+local _, pColorDarkLime = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 00 6A 00 68 8C 00 00 00")
+
+game.Rendering.Colors = {
+  pGreyishYellow = ffi.cast("unsigned short *", pColorGreyishYellow),
+  pColorDarkLime = ffi.cast("unsigned short *", pColorDarkLime),
+}
 
 if not remote then
   return game

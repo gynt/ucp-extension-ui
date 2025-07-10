@@ -1586,14 +1586,27 @@ union MenuItemPosition { /* The position is either set directly or through a UC.
     struct MenuItemUCInfo ucInfo;
 };
 
+union MenuItemRenderFunctionTypeSignature {
+  void (__cdecl *simple)(int);
+  void (__cdecl *gmDataImage)(int);
+  void (__cdecl *slider)(int, int, int, int, bool);
+  void (__cdecl *scrollbar)(int, int, int, int, bool);
+};
+
+union MenuItemActionHandlerFunctionTypeSignature {
+  void (__cdecl *simple)(int);
+  void (__cdecl *slider)(int, int, int*, int*, int *);
+  void (__cdecl *scrollbar)(int, int, int*, int*, int *);
+};
+
 struct MenuItem {
     enum MenuItemType menuItemType;
     union MenuItemPosition position;
     int itemWidth;
     int itemHeight;
-    void (*menuItemActionHandler)(int);
+    union MenuItemActionHandlerFunctionTypeSignature menuItemActionHandler;
     union MenuItemCallbackParameter callbackParameter;
-    void (*menuItemRenderFunction)(int, ...); // This signature differs per render function type
+    union MenuItemRenderFunctionTypeSignature menuItemRenderFunction; // This signature differs per render function type
     union MenuItemFirstItemTypeData firstItemTypeData;
     enum MenuItemRenderFunctionType menuItemRenderFunctionType;
     int field9_0x28;
