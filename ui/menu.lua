@@ -31,7 +31,8 @@ if remote ~= nil then
 end
 
 ---@class Menu
----@field pMenu number
+---@field pMenu table<struct_Menu>
+---@field menu struct_Menu
 local Menu = {}
 api.ui.Menu = Menu
 
@@ -51,6 +52,7 @@ api.ui.Menu = Menu
 -- Because the Constructor_Menu() function already expects them to be present.
 ---@param params MenuParams
 function Menu:createMenu(params)
+  ---@type Menu
   local o = {}
 
   if params.menuID == nil then
@@ -64,8 +66,8 @@ function Menu:createMenu(params)
 
   o.menuID = params.menuID
 
+  ---@type table<struct_Menu>
   o.pMenu = ffi.new("Menu[1]", {})
-  ---@type struct_Menu
   o.menu = o.pMenu[0]
   o.pMenuView = ffi.new("struct MenuView[1]", {})
   o.menuView = o.pMenuView[0]

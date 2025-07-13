@@ -1,4 +1,19 @@
 
+---@class Position
+---@field x number
+---@field y number
+
+---@class CallbackParameter
+---@field parameter number
+
+--- TODO: incomplete
+---@class MenuItem
+---@field menuItemType number
+---@field position Position
+---@field itemWidth number
+---@field itemHeight number
+---@field callbackParameter CallbackParameter
+
 ---@class struct_Menu
 ---@field menuItemArray table<MenuItem>;
 ---@field xPosition int;

@@ -98,7 +98,7 @@ game.Rendering.renderGMWithBlending = ffi.cast([[
 ]], pRenderGMWithBlending)
 
 local _, pTextureRenderCore = utils.AOBExtract("39 ? I( ? ? ? ? ) 74 05 83 C8 FF")
-game.Rendering.pTextureRenderCore = pTextureRenderCore
+game.Rendering.textureRenderCore = ffi.cast("void *", pTextureRenderCore)
 
 local pRenderNumber2 = core.AOBScan("8B 44 24 04 53 55 56 57 50")
 game.Rendering.renderNumber2 = ffi.cast([[
@@ -183,7 +183,11 @@ game.Rendering.renderButtonBackground = ffi.cast([[
     int blendStrength,
     int renderTarget
   )
+    
 ]], core.AOBScan("8B 44 24 04 83 EC 08"))
+
+local pRenderButtonGM = core.AOBScan("56 33 F6 39 ? ? ? ? ? 57 74 05")
+game.Rendering.renderButtonGM = ffi.cast("void (*)(void)", pRenderButtonGM)
 
 local _, pAlphaAndButtonSurface = utils.AOBExtract("8B ? I( ? ? ? ? ) 89 ? ? ? ? ? 8B ? ? ? ? ? D1 E2")
 game.Rendering.alphaAndButtonSurface = ffi.cast("void *", pAlphaAndButtonSurface)
@@ -264,6 +268,9 @@ game.Input.isMouseInsideBox = ffi.cast([[
 
 local _, pMouseState = utils.AOBExtract("B9 I( ? ? ? ? ) 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 89 ? ? ? ? ?")
 game.Input.mouseState = ffi.cast("void *", pMouseState)
+
+local _, mmc1 = utils.AOBExtract("B9 I( ? ? ? ? ) E8 ? ? ? ? 5E 5B E9 ? ? ? ?")
+game.UI.modalMenu = ffi.cast("struct MenuModal *", mmc1)
 
 if not remote then
   return game
