@@ -24,6 +24,12 @@ typedef unsigned short    ushort;
 typedef unsigned short    word;
 
 
+/** General */
+typedef struct IntegerPoint {
+  int x; 
+  int y;
+} IntegerPoint;
+
 /** UI */
 
 typedef struct MenuItem MenuItem, *PMenuItem;

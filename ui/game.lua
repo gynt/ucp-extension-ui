@@ -204,6 +204,18 @@ game.Rendering.drawColorBox = ffi.cast([[
   )
 ]], core.AOBScan("56 8B F1 E8 ? ? ? ? 8B 44 24 18 8B 4C 24 14 8B 54 24 10 50 8B 44 24 10 51 8B 4C 24 10 52 50 51 8B CE E8 ? ? ? ? 85 C0 74 1B "))
 
+game.Rendering.drawBlendedBlackBox = ffi.cast([[
+  void (__thiscall *)
+  (
+    void * this,
+    int left,
+    int top,
+    int right,
+    int bottom,
+    int blendStrength
+  )
+]], core.AOBScan("56 8B F1 E8 ? ? ? ? 8B 44 24 14 8B 4C 24 10 8B 54 24 0C 6A 00 50 8B 44 24 10 51 52 50 8B CE E8 ? ? ? ? 85 C0 74 1F"))
+
 game.Rendering.drawBorderBox = ffi.cast([[
   void (__thiscall *)
   (
