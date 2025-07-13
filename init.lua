@@ -10,6 +10,8 @@ local state
 local manager = require("manager")
 manager.initialize()
 
+local patches = require("patches")
+
 ---@class Module_UI
 local ui = {}
 
@@ -56,7 +58,7 @@ function ui:enable()
 
   state = initialize()
 
-
+  patches.setButtonPropertiesPatch()
 end
 
 function ui:disable()
