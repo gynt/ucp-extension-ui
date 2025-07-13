@@ -60,6 +60,7 @@ function ModalMenu:createModalMenu(params)
       o.pointerToMenu = params.pointerToMenu  
     elseif params.menu ~= nil then
       o.pointerToMenu = params.menu.pMenu
+      o.menu = params.menu -- to prevent garbage collection
     else
       error("no menu specified")
     end
@@ -127,4 +128,5 @@ end
 
 function ModalMenu:register()
   -- This function is a dummy as creating a ModalMenu means automatically registering it as well
+  registerObject(self)
 end

@@ -131,6 +131,7 @@ function Menu:register()
   
   local addr = ffi_tonumber(ffi.cast("long", self.pMenu))
   if addr == nil then error("addr is nil") end
+  registerObject(self)
   return manager.registerMenu(addr, self.menuID)
 end
 

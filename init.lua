@@ -10,6 +10,7 @@ local state
 local manager = require("manager")
 manager.initialize()
 
+---@class Module_UI
 local ui = {}
 
 local function initialize(options)

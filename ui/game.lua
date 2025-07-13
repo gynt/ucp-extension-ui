@@ -136,6 +136,21 @@ game.Rendering.renderTextToScreen = ffi.cast([[
   )
 ]], core.AOBScan("83 7C 24 1C 00 53 56 8B F1 75 06 C7 06 00 00 00 00 8B 5C 24 0C 85 DB 74 7C"))
 
+game.Rendering.renderTextToScreenConst = ffi.cast([[
+  void (__thiscall *)
+  (
+    void * this, //Text Manager
+    char const *textAddress, 
+    int xParam,
+    int yParam,
+    int alignment,
+    unsigned int color,
+    int fontSize,
+    bool keepOffsetX,
+    int blendStrength
+  )
+]], core.AOBScan("83 7C 24 1C 00 53 56 8B F1 75 06 C7 06 00 00 00 00 8B 5C 24 0C 85 DB 74 7C"))
+
 game.Rendering.getTextStringInGroupAtOffset = ffi.cast([[
   char * (__thiscall *)
   (
@@ -204,13 +219,39 @@ game.Rendering.renderNumberToScreen2 = ffi.cast([[
 
 ]], core.AOBScan("8B 44 24 04 56 50 8B F1 E8 ? ? ? ? 8B 4C 24 24"))
 
-  local _, pColorGreyishYellow = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 58")
+
+local pGeneralButtonRender = core.AOBScan("A1 ? ? ? ? 8B ? ? ? ? ? 8D 0C C5 00 00 00 00 2B C8 A1 ? ? ? ? 50 A1 ? ? ? ? 52 8D ? ? ? ? ? ? 50 C7 ? ? ? ? ? ? ? ? ? E8 ? ? ? ? 8B 09 50 51 B9 ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 8D 14 C5 00 00 00 00 2B D0 8B ? ? ? ? ? ? A3 ? ? ? ? C7 ? ? ? ? ? ? ? ? ? C3", core.AOBScan("83 ? ? ? ? ? ? 56 8B 74 24 08 75 20"))
+game.Rendering.generalButtonRender = ffi.cast([[
+  void (__cdecl *)
+  (
+    int param_1,
+    ...
+  )
+]], pGeneralButtonRender)
+
+local _, pColorGreyishYellow = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 58")
 local _, pColorDarkLime = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 00 6A 00 68 8C 00 00 00")
 
 game.Rendering.Colors = {
   pGreyishYellow = ffi.cast("unsigned short *", pColorGreyishYellow),
   pColorDarkLime = ffi.cast("unsigned short *", pColorDarkLime),
 }
+
+if game.Input == nil then game.Input = {} end
+
+game.Input.isMouseInsideBox = ffi.cast([[
+  int (__thiscall *)
+  (
+    void * this,
+    int x,
+    int y,
+    int width,
+    int height
+  )
+]], core.AOBScan("8B 41 10 8B 54 24 04"))
+
+local _, pMouseState = utils.AOBExtract("B9 I( ? ? ? ? ) 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 89 ? ? ? ? ?")
+game.Input.mouseState = ffi.cast("void *", pMouseState)
 
 if not remote then
   return game

@@ -9,6 +9,14 @@ local _, pModalMenuStackTop = utils.AOBExtract("8B ? I(? ? ? ?) 89 50 24")
 
 local oldOne = nil
 
+local function logMenuPair(mp)
+  local pMenuItemArray = 0
+  if mp.menuID ~= -1 and mp.menuAddress ~= 0 and mp.menuAddress ~= -1 then
+    pMenuItemArray = ffi.tonumber(ffi.cast("unsigned long *", mp.menuAddress)[0])
+  end
+  log(VERBOSE, string.format("%d \t 0x%X \t 0x%X", mp.menuID, ffi.tonumber(ffi.cast("long", mp.menuAddress)), pMenuItemArray))
+end
+
 local function reallocateMenuPairArray(old, oldSize, newSize)
   oldOne = old -- store it here so it doesn't get garbage collected just yet
   local ct = string.format("MenuIDMenuElementAddressPair[%s]", newSize)
@@ -21,6 +29,12 @@ local function reallocateMenuPairArray(old, oldSize, newSize)
   end
   local addr = ffi.tonumber(ffi.cast("long", new))
   core.writeCodeInteger(CODE_PushMenuViewIDMenuMapping + 1, addr)
+
+  --debug INFO
+  log(VERBOSE, "MENUS")
+  for i=0,newSize do
+    logMenuPair(new[i])
+  end
 
   return new
 end
@@ -50,6 +64,9 @@ function Manager.initialize(options)
   self.modalMenuStackTop = ffi.cast("struct MenuModal **", pModalMenuStackTop)
 
   self.initialized = true
+
+
+  
 end
 
 function Manager.countMenuEntries()
@@ -155,6 +172,7 @@ function Manager.registerMenu(menuAddress, preferredID)
 
   self.currentFreeMenuIndex = self.currentFreeMenuIndex + 1
 
+  log(VERBOSE, string.format("%d \t 0x%X", chosen, menuAddress))
 
   return chosen
 end
@@ -216,6 +234,12 @@ end
 function Manager.getAvailableModalMenuID(preferredID)
   local unavailable = Manager.getUnavailableModalMenuIDs()
   return chooseAvailable(unavailable, preferredID)
+end
+
+function Manager.printMenus()
+  for i=0,ManagerSingletonState.maxMenus do
+    logMenuPair(ManagerSingletonState.menuIDAddressPairList[i])
+  end
 end
 
 function Manager.getState()

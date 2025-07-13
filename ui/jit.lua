@@ -11,3 +11,15 @@ if jit == nil then
     end,
   }
 end
+
+if registerObject == nil then
+  function registerObject(obj)
+    
+    if _G._LUAJIT_REGISTRY == nil then
+      _G._LUAJIT_REGISTRY = {}
+    end
+    _G._LUAJIT_REGISTRY[obj] = true
+
+    return obj
+  end
+end
