@@ -22,7 +22,10 @@ end
 ---@type CFFIInterface
 local ffi = ffi
 if not remote then
-  ffi = modules.cffi:cffi()
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  ---@type cffi
+  local cffi = modules.cffi
+  ffi = cffi:cffi()
 end
 
 local manager = _G.manager
@@ -33,6 +36,18 @@ end
 ---@class Menu
 ---@field pMenu table<struct_Menu>
 ---@field menu struct_Menu
+---@field menuID number
+---@field pMenuView table<MenuView>
+---@field menuView MenuView
+---@field menuItemsCount number
+---@field menuItems table<MenuItem>
+---@field pPrepare number
+---@field pInitial number
+---@field pFrame number
+---@field prepare (fun():void)
+---@field initial (fun():void)
+---@field frame (fun():void)
+---
 local Menu = {}
 api.ui.Menu = Menu
 
@@ -52,6 +67,7 @@ api.ui.Menu = Menu
 -- Because the Constructor_Menu() function already expects them to be present.
 ---@param params MenuParams
 function Menu:createMenu(params)
+  ---@diagnostic disable-next-line: missing-fields
   ---@type Menu
   local o = {}
 
