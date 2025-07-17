@@ -93,13 +93,13 @@ function Menu:createMenu(params)
     o.menuItemsIndex = 0
     -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
     ---@type table
-    o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {}) -- TODO:, use [0] = {menuItemType = 0x66}
-
+    o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {})
       
     for i=0,o.menuItemsCount do
       o.menuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
       o.menuItems[i].menuPointer = ffi.nullptr
     end
+
   elseif params.menuItems ~= nil then
     ---@type table
     o.menuItems = params.menuItems -- Assumes the user took care of the final entry...
@@ -144,6 +144,42 @@ end
 
 local ffi_tonumber = ffi.tonumber or tonumber
 
+---@param pointer number|table<struct_Menu>
+---@param info table|nil
+function Menu:fromPointer(pointer, info)
+  ---@type struct_Menu
+  local menu
+  if type(pointer) == "number" then
+    pointer = ffi.cast("Menu *", pointer)
+  end
+  menu = pointer[0]
+
+  --- TODO: find menuview and ID by travelling the linked list
+  local id = menu.menuID
+
+  ---@type table<MenuItem>
+  local menuItemsArray = menu.menuItemArray
+  local i = 0
+  while menuItemsArray[i].menuItemType ~= 0x66 do
+    i = i + 1
+  end
+
+  ---@type Menu
+  local o = {
+    menu = menu,
+    pMenu = pointer,
+    pMenuView = nil,
+    menuView = nil,
+    menuItemsCount = i,
+    menuItemsIndex = i, -- TODO: meant to signal the menu item array is full, does this work?
+    menuItems = menuItemsArray,
+  }
+  
+  o = setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
 function Menu:register()
   if self.pMenu == nil then error("menu is nil") end
   
@@ -153,13 +189,57 @@ function Menu:register()
   return manager.registerMenu(addr, self.menuID)
 end
 
+function Menu:reallocateMenuItems()
+  local newCount = self.menuItemsCount * 2
+  
+  local newMenuItems = ffi.new("MenuItem[?]", newCount) -- TODO: dynamic multiplication parameter?
+
+  log(VERBOSE, string.format("Menu:addMenuItem: rellocating and duplicating menuitem array size"))
+
+  for i=0,self.menuItemsCount do
+    newMenuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
+    newMenuItems[i].menuPointer = ffi.nullptr
+  end
+
+  ffi.copy(newMenuItems, self.menuItems, ffi.sizeof("MenuItem", self.menuItemsCount))
+
+  --- If the array had been allocated with luajit e.g. via Menu:createMenu, then it will be garbage collected soon!
+  self.menuItems = newMenuItems
+  self.menuItemsCount = newCount
+
+  --- TODO: increment index?
+end
+
+function Menu:insertMenuItem(index, params)
+  if self.menuItemsIndex >= self.menuItemsCount then
+    self:reallocateMenuItems()
+  end
+
+  --- TODO: needs testing...
+
+  for i=self.menuItemsIndex,index,-1 do
+    self.menuItems[i+1] = self.menuItems[i]
+  end
+
+  ffi.fill(self.menuItems[index], ffi.sizeof("MenuItem", 1), 0)
+  self.menuItems[index] = params
+
+  self.menuItemsIndex = self.menuItemsIndex + 1
+end
+
+---Note: UI functions can perhaps never add Menu Items to their own array
+---due to reallocation?
 function Menu:addMenuItem(params)
   if self.menuItemsIndex >= self.menuItemsCount then
-    error("reached menu item limit")
+    self:reallocateMenuItems()
   end
 
   local menuItem = self.menuItems[self.menuItemsIndex]
   menuItem.menuPointer = self.menu
+
+  if params.menuItemType == nil and menuItem.menuItemType == 0x66 then
+    error(string.format("Menu:addMenuItem: menu item type not specified, menu item will not work %X"))
+  end
 
   for k, v in pairs(params) do
     menuItem[k] = v
