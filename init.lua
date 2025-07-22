@@ -51,6 +51,22 @@ local function initialize(options)
   state:importHeaderFile(string.format("ucp/modules/ui/ui/headers/%s/ui.h", options.headers))
   state:executeString([[ui = require("ui")]])
 
+  state:registerRequireHandler(function(self, path)
+    local handle, err = io.open(string.format("%s", path))
+    if not handle then
+      handle, err = io.open(string.format("%s/init.lua", path))
+    end
+  
+    if not handle then
+      error( err)
+    end
+  
+    local contents = handle:read("*all")
+    handle:close()
+
+    return contents
+  end)
+
   return state
 end
 
