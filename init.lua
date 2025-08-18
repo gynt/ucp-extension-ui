@@ -106,8 +106,8 @@ function ui:activateModalMenu(menuID, slot, delay)
   end
 end
 
-function ui:createMenuFromFile(path)
-  state:executeFile(path)
+function ui:createMenuFromFile(path, convert, cleanup)
+  return state:executeFile(path, cleanup, convert)
 end
 
 function ui:registerEventHandler(key, func)
