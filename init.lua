@@ -149,6 +149,8 @@ return ui, {
     ignored = {
       "getState",
       "createState",
+      "createMenuFromFile",
+      "registerMenu",
     }
   }
 }
