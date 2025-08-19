@@ -151,6 +151,7 @@ return ui, {
       "createState",
       "createMenuFromFile",
       "registerMenu",
+      "access",
     }
   }
 }
