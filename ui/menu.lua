@@ -203,7 +203,11 @@ function Menu:reallocateMenuItems()
   
   local newMenuItems = ffi.new("MenuItem[?]", newCount) -- TODO: dynamic multiplication parameter?
 
-  log(VERBOSE, string.format("Menu:addMenuItem: rellocating and duplicating menuitem array size"))
+  log(VERBOSE, string.format("Menu:reallocateMenuItems: rellocating menu items from 0x%X (%d) to 0x%X (%d)", 
+    ffi_tonumber(ffi.cast("unsigned long", self.menuItems)), 
+    self.menuItemsCount, 
+    ffi_tonumber(ffi.cast("unsigned long", newMenuItems)), 
+    newCount))
 
   for i=0,self.menuItemsCount do
     newMenuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
