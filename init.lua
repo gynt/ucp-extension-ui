@@ -127,7 +127,7 @@ function ui:getState()
   return state
 end
 
-function ui:testInterface()
+function ui:access()
   return {
     game = require("ui.game"),
     api = require("ui.menu"),

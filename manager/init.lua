@@ -40,6 +40,8 @@ local function reallocateMenuPairArray(old, oldSize, newSize)
 end
 
 local ManagerSingletonState = {}
+
+---@class Manager
 local Manager = {}
 function Manager.initialize(options)
   local options = options or {}

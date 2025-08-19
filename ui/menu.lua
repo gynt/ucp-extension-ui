@@ -28,9 +28,12 @@ if not remote then
   ffi = cffi:cffi()
 end
 
-local manager = _G.manager
+---@type Manager
+local manager 
 if remote ~= nil then
-   manager = remote.interface.manager
+  manager = remote.interface.manager
+else
+  manager = require("manager")
 end
 
 ---@class Menu
@@ -145,17 +148,18 @@ end
 local ffi_tonumber = ffi.tonumber or tonumber
 
 ---@param pointer number|table<struct_Menu>
----@param info table|nil
-function Menu:fromPointer(pointer, info)
+---@param menuID number
+function Menu:fromPointer(pointer, menuID)
+
+  if menuID == nil then error("no menu id given") end
+
   ---@type struct_Menu
   local menu
   if type(pointer) == "number" then
     pointer = ffi.cast("Menu *", pointer)
   end
   menu = pointer[0]
-
-  --- TODO: find menuview and ID by travelling the linked list
-  local id = menu.menuID
+ 
 
   ---@type table<MenuItem>
   local menuItemsArray = menu.menuItemArray
@@ -166,6 +170,7 @@ function Menu:fromPointer(pointer, info)
 
   ---@type Menu
   local o = {
+    menuID = menuID,
     menu = menu,
     pMenu = pointer,
     pMenuView = nil,
@@ -178,6 +183,10 @@ function Menu:fromPointer(pointer, info)
   o = setmetatable(o, self)
   self.__index = self
   return o
+end
+
+function Menu:fromID(menuID)
+  return Menu:fromPointer(manager.lookupMenu(menuID), menuID)
 end
 
 function Menu:register()
@@ -207,6 +216,8 @@ function Menu:reallocateMenuItems()
   self.menuItems = newMenuItems
   self.menuItemsCount = newCount
 
+  self.menu.menuItemArray = newMenuItems
+
   --- TODO: increment index?
 end
 
@@ -223,6 +234,7 @@ function Menu:insertMenuItem(index, params)
 
   ffi.fill(self.menuItems[index], ffi.sizeof("MenuItem", 1), 0)
   self.menuItems[index] = params
+  self.menuItems[index].menuPointer = self.menu
 
   self.menuItemsIndex = self.menuItemsIndex + 1
 end
