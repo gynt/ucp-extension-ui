@@ -201,9 +201,14 @@ function Menu:register()
 end
 
 function Menu:reallocateMenuItems()
+  log(VERBOSE, "Menu:reallocateMenuItems()")
   local newCount = self.menuItemsCount * 2
   
-  local newMenuItems = ffi.new("MenuItem[?]", newCount) -- TODO: dynamic multiplication parameter?
+  local newMenuItems
+  local status, err = pcall(function()
+    newMenuItems = ffi.new(string.format("struct MenuItem[%d]", newCount), {}) -- TODO: dynamic multiplication parameter?
+  end)
+  if status == false then error(err) end
 
   log(VERBOSE, string.format("Menu:reallocateMenuItems: rellocating menu items from 0x%X (%d) to 0x%X (%d)", 
     ffi_tonumber(ffi.cast("unsigned long", self.menuItems)), 
@@ -216,7 +221,7 @@ function Menu:reallocateMenuItems()
     newMenuItems[i].menuPointer = ffi.nullptr
   end
 
-  ffi.copy(newMenuItems, self.menuItems, self.menuItemsCount * ffi.sizeof("MenuItem"))
+  ffi.copy(newMenuItems, self.menuItems, self.menuItemsCount * ffi.sizeof("struct MenuItem"))
 
   --- If the array had been allocated with luajit e.g. via Menu:createMenu, then it will be garbage collected soon!
   self.menuItems = newMenuItems

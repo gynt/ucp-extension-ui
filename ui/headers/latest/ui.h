@@ -1593,6 +1593,7 @@ union MenuItemPosition { /* The position is either set directly or through a UC.
 };
 
 union MenuItemRenderFunctionTypeSignature {
+  unsigned long address;
   void (__cdecl *simple)(int);
   void (__cdecl *gmDataImage)(int);
   void (__cdecl *slider)(int, int, int, int, bool);
@@ -1600,6 +1601,7 @@ union MenuItemRenderFunctionTypeSignature {
 };
 
 union MenuItemActionHandlerFunctionTypeSignature {
+  unsigned long address;
   void (__cdecl *simple)(int);
   void (__cdecl *slider)(int, int, int*, int*, int *);
   void (__cdecl *scrollbar)(int, int, int*, int*, int *);
