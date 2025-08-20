@@ -168,6 +168,8 @@ function Menu:fromPointer(pointer, menuID)
     i = i + 1
   end
 
+  log(VERBOSE, string.format("Menu:fromPointer(0x%X, 0x%X): has %d menu items", ffi_tonumber(ffi.cast("unsigned long", pointer)), menuID, i))
+
   ---@type Menu
   local o = {
     menuID = menuID,
@@ -214,7 +216,7 @@ function Menu:reallocateMenuItems()
     newMenuItems[i].menuPointer = ffi.nullptr
   end
 
-  ffi.copy(newMenuItems, self.menuItems, ffi.sizeof("MenuItem", self.menuItemsCount))
+  ffi.copy(newMenuItems, self.menuItems, self.menuItemsCount * ffi.sizeof("MenuItem"))
 
   --- If the array had been allocated with luajit e.g. via Menu:createMenu, then it will be garbage collected soon!
   self.menuItems = newMenuItems
@@ -231,13 +233,18 @@ function Menu:insertMenuItem(index, params)
   end
 
   --- TODO: needs testing...
-
+  log(VERBOSE, "Menu:insertMenuItem: copying items")
   for i=self.menuItemsIndex,index,-1 do
     self.menuItems[i+1] = self.menuItems[i]
   end
 
+  log(VERBOSE, "Menu:insertMenuItem: clearing original item")
   ffi.fill(self.menuItems[index], ffi.sizeof("MenuItem", 1), 0)
+
+  log(VERBOSE, "Menu:insertMenuItem: setting new item")
   self.menuItems[index] = params
+
+  log(VERBOSE, "Menu:insertMenuItem: setting parent menu of item")
   self.menuItems[index].menuPointer = self.menu
 
   self.menuItemsIndex = self.menuItemsIndex + 1

@@ -99,6 +99,7 @@ game.Rendering.renderGMWithBlending = ffi.cast([[
 
 local _, pTextureRenderCore = utils.AOBExtract("39 ? I( ? ? ? ? ) 74 05 83 C8 FF")
 game.Rendering.textureRenderCore = ffi.cast("void *", pTextureRenderCore)
+game.Rendering.pDrawBufferChoiceValue = ffi.cast("int *", pTextureRenderCore + 4)
 
 local pRenderNumber2 = core.AOBScan("8B 44 24 04 53 55 56 57 50")
 game.Rendering.renderNumber2 = ffi.cast([[
@@ -259,10 +260,12 @@ game.Rendering.generalButtonRender = ffi.cast([[
 
 local _, pColorGreyishYellow = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 58")
 local _, pColorDarkLime = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 00 6A 00 68 8C 00 00 00")
+local _, pColorBlack = utils.AOBExtract("0F ? ? I( ? ? ? ? ) 50 A1 ? ? ? ? 8D 88 48 02 00 00")
 
 game.Rendering.Colors = {
   pGreyishYellow = ffi.cast("unsigned short *", pColorGreyishYellow),
-  pColorDarkLime = ffi.cast("unsigned short *", pColorDarkLime),
+  pDarkLime = ffi.cast("unsigned short *", pColorDarkLime),
+  pBlack = ffi.cast("unsigned short *", pColorBlack)
 }
 
 if game.Input == nil then game.Input = {} end
@@ -283,6 +286,17 @@ game.Input.mouseState = ffi.cast("void *", pMouseState)
 
 local _, mmc1 = utils.AOBExtract("B9 I( ? ? ? ? ) E8 ? ? ? ? 5E 5B E9 ? ? ? ?")
 game.UI.modalMenu = ffi.cast("struct MenuModal *", mmc1)
+
+game.UI.activateModalMenu = ffi.cast([[
+  void (__thiscall *)(
+    void * this, // MenuModalComposition
+    int menuModalID,
+    bool retainOther
+  )
+]], core.AOBScan("53 55 33 ED 39 6C 24 10"))
+
+local _, pMenuModalComposition1 = utils.AOBExtract("B9 I( ? ? ? ? ) E8 ? ? ? ? 5E 5B E9 ? ? ? ?")
+game.UI.MenuModalComposition1 = ffi.cast("void *", pMenuModalComposition1)
 
 if not remote then
   return game
