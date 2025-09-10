@@ -150,17 +150,20 @@ local ffi_tonumber = ffi.tonumber or tonumber
 ---@param pointer number|table<struct_Menu>
 ---@param menuID number
 function Menu:fromPointer(pointer, menuID)
-
+  local addr = ffi_tonumber(ffi.cast("unsigned long", pointer))
+  log(VERBOSE, string.format("Menu:fromPointer(0x%X, %d)", addr, menuID))
   if menuID == nil then error("no menu id given") end
 
   ---@type struct_Menu
   local menu
   if type(pointer) == "number" then
+    log(VERBOSE, string.format("Menu:fromPointer(0x%X, %d): casting pointer", addr, menuID))
     pointer = ffi.cast("Menu *", pointer)
   end
   menu = pointer[0]
  
 
+  log(VERBOSE, string.format("Menu:fromPointer(0x%X, %d): casting menuItemArray @ 0xX", addr, menuID, ffi_tonumber(ffi.cast("unsigned long", menu.menuItemArray))))
   ---@type table<MenuItem>
   local menuItemsArray = menu.menuItemArray
   local i = 0
@@ -168,7 +171,7 @@ function Menu:fromPointer(pointer, menuID)
     i = i + 1
   end
 
-  log(VERBOSE, string.format("Menu:fromPointer(0x%X, 0x%X): has %d menu items", ffi_tonumber(ffi.cast("unsigned long", pointer)), menuID, i))
+  log(VERBOSE, string.format("Menu:fromPointer(0x%X, 0x%X): has %d menu items", addr, menuID, i))
 
   ---@type Menu
   local o = {
@@ -188,7 +191,10 @@ function Menu:fromPointer(pointer, menuID)
 end
 
 function Menu:fromID(menuID)
-  return Menu:fromPointer(manager.lookupMenu(menuID), menuID)
+  log(VERBOSE, string.format("Menu:fromID(%d)", menuID))
+  local addr = manager.lookupMenu(menuID)
+  log(VERBOSE, string.format("Menu:fromID(%d) => 0x%X", menuID, ffi_tonumber(ffi.cast("unsigned long", addr))))
+  return Menu:fromPointer(addr, menuID)
 end
 
 function Menu:register()
@@ -202,7 +208,8 @@ end
 
 function Menu:reallocateMenuItems()
   log(VERBOSE, "Menu:reallocateMenuItems()")
-  local newCount = self.menuItemsCount * 2
+  local oldCount = self.menuItemsCount
+  local newCount = oldCount * 2
   
   local newMenuItems
   local status, err = pcall(function()
@@ -212,16 +219,16 @@ function Menu:reallocateMenuItems()
 
   log(VERBOSE, string.format("Menu:reallocateMenuItems: rellocating menu items from 0x%X (%d) to 0x%X (%d)", 
     ffi_tonumber(ffi.cast("unsigned long", self.menuItems)), 
-    self.menuItemsCount, 
+    oldCount, 
     ffi_tonumber(ffi.cast("unsigned long", newMenuItems)), 
     newCount))
 
-  for i=0,self.menuItemsCount do
+  for i=0,oldCount do
     newMenuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
     newMenuItems[i].menuPointer = ffi.nullptr
   end
 
-  ffi.copy(newMenuItems, self.menuItems, self.menuItemsCount * ffi.sizeof("struct MenuItem"))
+  ffi.copy(newMenuItems, self.menuItems, oldCount * ffi.sizeof("struct MenuItem"))
 
   --- If the array had been allocated with luajit e.g. via Menu:createMenu, then it will be garbage collected soon!
   self.menuItems = newMenuItems
@@ -238,13 +245,14 @@ function Menu:insertMenuItem(index, params)
   end
 
   --- TODO: needs testing...
-  log(VERBOSE, "Menu:insertMenuItem: copying items")
+  log(VERBOSE, string.format("Menu:insertMenuItem(%d): copying items: %d up to and including %d", index, index, self.menuItemsIndex))
   for i=self.menuItemsIndex,index,-1 do
     self.menuItems[i+1] = self.menuItems[i]
   end
 
-  log(VERBOSE, "Menu:insertMenuItem: clearing original item")
-  ffi.fill(self.menuItems[index], ffi.sizeof("MenuItem", 1), 0)
+  log(VERBOSE, string.format("Menu:insertMenuItem: clearing original item at: 0x%X", ffi_tonumber(ffi.cast("unsigned long", ffi.addressof(self.menuItems[index])))))
+  -- The addressof() call is necessary to avoid a access violation exception for a reason I do not understand.
+  ffi.fill(ffi.addressof(self.menuItems[index]), ffi.sizeof("struct MenuItem"), 0)
 
   log(VERBOSE, "Menu:insertMenuItem: setting new item")
   self.menuItems[index] = params
@@ -252,6 +260,7 @@ function Menu:insertMenuItem(index, params)
   log(VERBOSE, "Menu:insertMenuItem: setting parent menu of item")
   self.menuItems[index].menuPointer = self.menu
 
+  log(VERBOSE, string.format("Menu:insertMenuItem: incrementing index to: %d", self.menuItemsIndex + 1))
   self.menuItemsIndex = self.menuItemsIndex + 1
 end
 

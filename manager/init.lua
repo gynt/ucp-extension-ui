@@ -27,7 +27,7 @@ local function reallocateMenuPairArray(old, oldSize, newSize)
     new[i].menuID = -1 -- mark as end element for all new empty entries
     new[i].menuAddress = ffi.nullptr
   end
-  local addr = ffi.tonumber(ffi.cast("long", new))
+  local addr = ffi.tonumber(ffi.cast("unsigned long", new))
   core.writeCodeInteger(CODE_PushMenuViewIDMenuMapping + 1, addr)
 
   --debug INFO
