@@ -95,7 +95,7 @@ function Manager.expandIfNecessary(factor)
     end
 
     local newSize = self.maxMenus * factor
-    log(INFO, string.format("expanding menu id array from old size (%s) to new size (%s)", self.maxMenus, newSize))
+    log(DEBUG, string.format("expanding menu id array from old size (%s) to new size (%s)", self.maxMenus, newSize))
     
     self.menuIDAddressPairList = reallocateMenuPairArray(self.menuIDAddressPairList, self.maxMenus + 1, newSize + 1)
     self.currentFreeMenuIndex = self.maxMenus
@@ -150,7 +150,7 @@ end
 
 function Manager.registerMenu(menuAddress, preferredID)
   local self = ManagerSingletonState
-  log(INFO, string.format("Registering menu (0x%X ID %s) at index: %s", menuAddress, preferredID, self.currentFreeMenuIndex))
+  log(DEBUG, string.format("Registering menu (0x%X ID %s) at index: %s", menuAddress, preferredID, self.currentFreeMenuIndex))
   Manager.expandIfNecessary()
 
   local chosen = Manager.getAvailableMenuID(preferredID)
