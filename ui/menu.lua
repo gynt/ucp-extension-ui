@@ -42,7 +42,7 @@ end
 ---@field menuID number
 ---@field pMenuView table<MenuView>
 ---@field menuView MenuView
----@field menuItemsCount number
+---@field menuItemsCount number the number of menu items including the final sentinel item
 ---@field menuItems table<MenuItem>
 ---@field pPrepare number
 ---@field pInitial number
@@ -56,7 +56,7 @@ api.ui.Menu = Menu
 
 ---@class MenuParams
 ---@field menuID number
----@field menuItemsCount number|nil
+---@field menuItemsCount number|nil the number of menu items excluding the final sentinel item
 ---@field menuItems table<MenuItem>|nil
 ---@field pPrepare number|nil
 ---@field pInitial number|nil
@@ -92,11 +92,11 @@ function Menu:createMenu(params)
   o.menuView = o.pMenuView[0]
 
   if params.menuItemsCount ~= nil then
-    o.menuItemsCount = params.menuItemsCount  
+    o.menuItemsCount = params.menuItemsCount + 1
     o.menuItemsIndex = 0
     -- Adding the + 1 so the user doesn't need to know about the LAST_ENTRY
     ---@type table
-    o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount + 1), {})
+    o.menuItems = ffi.new(string.format("MenuItem[%s]", o.menuItemsCount), {})
       
     for i=0,o.menuItemsCount do
       o.menuItems[i].menuItemType = 0x66 -- LAST_ENTRY  
@@ -250,9 +250,14 @@ function Menu:insertMenuItem(index, params)
     self.menuItems[i+1] = self.menuItems[i]
   end
 
-  log(VERBOSE, string.format("Menu:insertMenuItem: clearing original item at: 0x%X", ffi_tonumber(ffi.cast("unsigned long", ffi.addressof(self.menuItems[index])))))
+  local menuItemLen = ffi.sizeof("struct MenuItem")
+  local pMenuItem = ffi_tonumber(ffi.cast("unsigned long", ffi.addressof(self.menuItems[index])))
+  -- log(VERBOSE, string.format("Menu:insertMenuItem: clearing original item at: 0x%X (%d bytes)", pMenuItem, menuItemLen))
   -- The addressof() call is necessary to avoid a access violation exception for a reason I do not understand.
-  ffi.fill(ffi.addressof(self.menuItems[index]), ffi.sizeof("struct MenuItem"), 0)
+  -- But the button isn't actually set when I use addressof()
+  -- ffi.fill(ffi.cast("void *", self.menuItems[index]), ffi.sizeof("struct MenuItem"), 0)
+  -- TODO: The line below should be switched on again when all bugs have been fixed so far
+  -- core.setMemory(pMenuItem, 0, menuItemLen)
 
   log(VERBOSE, "Menu:insertMenuItem: setting new item")
   self.menuItems[index] = params
