@@ -163,7 +163,7 @@ function Menu:fromPointer(pointer, menuID)
   menu = pointer[0]
  
 
-  log(VERBOSE, string.format("Menu:fromPointer(0x%X, %d): casting menuItemArray @ 0xX", addr, menuID, ffi_tonumber(ffi.cast("unsigned long", menu.menuItemArray))))
+  log(VERBOSE, string.format("Menu:fromPointer(0x%X, %d): casting menuItemArray @ 0x%X", addr, menuID, ffi_tonumber(ffi.cast("unsigned long", menu.menuItemArray))))
   ---@type table<MenuItem>
   local menuItemsArray = menu.menuItemArray
   local i = 0
