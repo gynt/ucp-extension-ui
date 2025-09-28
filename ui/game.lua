@@ -249,14 +249,16 @@ game.Rendering.renderNumberToScreen2 = ffi.cast([[
 ]], core.AOBScan("8B 44 24 04 56 50 8B F1 E8 ? ? ? ? 8B 4C 24 24"))
 
 
-local _, pGeneralButtonRender = utils.AOBExtract("@(E8 ? ? ? ?) A1 ? ? ? ? 8D 0C C5 00 00 00 00 2B C8 83 FE 05 8B ? ? ? ? ? ? 89 ? ? ? ? ? 7C 05 ")
-game.Rendering.generalButtonRender = ffi.cast([[
-  void (__cdecl *)
-  (
-    int param_1,
-    ...
-  )
-]], pGeneralButtonRender)
+--- This cast cost me days of my life to figure out, but it basically doesn't work right!
+--- There will be a memory corruption error.
+-- local _, pGeneralButtonRender = utils.AOBExtract("@(E8 ? ? ? ?) A1 ? ? ? ? 8D 0C C5 00 00 00 00 2B C8 83 FE 05 8B ? ? ? ? ? ? 89 ? ? ? ? ? 7C 05 ")
+-- game.Rendering.generalButtonRender = ffi.cast([[
+--   void (__cdecl *)
+--   (
+--     int param_1,
+--     ...
+--   )
+-- ]], pGeneralButtonRender)
 
 local _, pColorGreyishYellow = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 58")
 local _, pColorDarkLime = utils.AOBExtract("66 ? I( ? ? ? ? ) E8 ? ? ? ? 6A 00 6A 00 68 8C 00 00 00")
@@ -270,6 +272,7 @@ game.Rendering.Colors = {
 
 if game.Input == nil then game.Input = {} end
 
+local _, pIsMouseInsideBox = utils.AOBExtract("@(E8 ? ? ? ?) 85 C0 74 07 C6 ? ? ? ? ? ?")
 game.Input.isMouseInsideBox = ffi.cast([[
   int (__thiscall *)
   (
@@ -279,7 +282,7 @@ game.Input.isMouseInsideBox = ffi.cast([[
     int width,
     int height
   )
-]], core.AOBScan("8B 41 10 8B 54 24 04"))
+]], pIsMouseInsideBox)
 
 local _, pMouseState = utils.AOBExtract("B9 I( ? ? ? ? ) 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? 89 ? ? ? ? ? E8 ? ? ? ? 89 ? ? ? ? ?")
 game.Input.mouseState = ffi.cast("void *", pMouseState)
