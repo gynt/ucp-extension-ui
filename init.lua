@@ -40,9 +40,6 @@ local function initialize(options)
     interface = {
       env = _ENV,
       extra = {
-        AOBScan = function(target)
-          return core.AOBScan(target)
-        end,
         manager = manager,
       }
     }
