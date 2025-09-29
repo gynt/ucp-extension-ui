@@ -152,6 +152,8 @@ game.Rendering.renderTextToScreenConst = ffi.cast([[
   )
 ]], core.AOBScan("83 7C 24 1C 00 53 56 8B F1 75 06 C7 06 00 00 00 00 8B 5C 24 0C 85 DB 74 7C"))
 
+local _, pGetTextStringInGroupAtOffset = utils.AOBExtract("@(E8 ? ? ? ?) BA ? ? ? ? 8A 08 88 0A 83 C0 01 83 C2 01 84 C9 75 F2 A1 ? ? ? ?")
+
 game.Rendering.getTextStringInGroupAtOffset = ffi.cast([[
   char * (__thiscall *)
   (
@@ -159,7 +161,7 @@ game.Rendering.getTextStringInGroupAtOffset = ffi.cast([[
     int groupIndex,
     int itemInGroup
   )
-]], core.AOBScan("8B 44 24 04 8D 50 FB"))
+]], pGetTextStringInGroupAtOffset)
 
 
 local _, pButtonState = utils.AOBExtract("8B ? I( ? ? ? ? ) 8D 44 38 65")
