@@ -18,12 +18,14 @@ local function logMenuPair(mp)
 end
 
 local function reallocateMenuPairArray(old, oldSize, newSize)
+  assert(oldSize >= 0 and oldSize == math.floor(oldSize), "invalid old menu array size")
+  assert(newSize >= oldSize and newSize == math.floor(newSize), "invalid new menu array size")
   oldOne = old -- store it here so it doesn't get garbage collected just yet
   local ct = string.format("MenuIDMenuElementAddressPair[%s]", newSize)
   log(VERBOSE, ct)
   local new = ffi.new(ct, {})
   ffi.copy(new, old, ffi.sizeof("MenuIDMenuElementAddressPair") * oldSize)
-  for i=oldSize,newSize do
+  for i=oldSize,newSize-1 do
     new[i].menuID = -1 -- mark as end element for all new empty entries
     new[i].menuAddress = ffi.nullptr
   end
@@ -32,7 +34,7 @@ local function reallocateMenuPairArray(old, oldSize, newSize)
 
   --debug INFO
   log(VERBOSE, "MENUS")
-  for i=0,newSize do
+  for i=0,newSize-1 do
     logMenuPair(new[i])
   end
 
