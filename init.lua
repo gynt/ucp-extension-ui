@@ -1,3 +1,5 @@
+require("pre")
+
 local pSwitchToMenuView = core.exposeCode(core.AOBScan("55 8B 6C 24 08 83 FD 17"), 3, 1)
 local _, pThis = utils.AOBExtract("A3 I( ? ? ? ? ) 89 5C 24 1C")
 
